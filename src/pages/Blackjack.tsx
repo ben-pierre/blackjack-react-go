@@ -1,5 +1,5 @@
 import "./Blackjack.css";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import PlayingCard from "../Components/Card";
 import EndGameModal from "../Components/blackjack/EndGameModal";
 import { checkDealerWin, sumHand, createDeck } from "../Types/blackjack";
@@ -106,7 +106,7 @@ export default function Blackjack() {
 
   function drawCard(hand: playingHand): playingHand {
     const nextDeck = [...deck];
-    const card = nextDeck.pop();
+    const card = nextDeck.pop()!;
     setDeck(nextDeck);
     return {
       cards: [...hand.cards, card],
