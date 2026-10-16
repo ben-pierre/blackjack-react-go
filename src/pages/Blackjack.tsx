@@ -1,6 +1,6 @@
 import "./Blackjack.css";
 import { useState } from "react";
-import { useNavigate, Link} from "react-router";
+import { Link} from "react-router";
 import { checkDealerWin, sumHand, createDeck } from "../Types/blackjack";
 import HandSection from "../Components/Hand";
 import type { playingHand, GamePhase } from "../Types/blackjack";
@@ -34,8 +34,6 @@ export default function Blackjack() {
     initialGame.dealerHand
   );
   const [dealerRevealed, setDealerRevealed] = useState(false);
-
-  const navigate = useNavigate();
 
   const gameOver = phase === "win" || phase === "lose" || phase === "tie";
 
