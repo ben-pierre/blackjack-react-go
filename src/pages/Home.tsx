@@ -1,6 +1,6 @@
 import discordLogo from "./../assets/discord.svg";
 import "./Home.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
 
 export default function Home() {
@@ -52,8 +52,9 @@ export default function Home() {
     });
   }
 
-
-  playAnimation();
+  useEffect(() => {
+    playAnimation();
+  }, []);
 
   return (
     <div className="v-center">
