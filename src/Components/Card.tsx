@@ -1,7 +1,7 @@
 
 import "./Card.css";
-import type { Card } from "../Types/PlayingCard";
-import { CardSuit } from "../Types/PlayingCard";
+import type { Card } from "../types/blackjack";
+import { CardRank, CardSuit } from "../types/blackjack";
 
 
 type CardProps = {
@@ -18,10 +18,22 @@ export default function PlayingCard({ card }: CardProps) {
     [CardSuit.Spade]: "♠"
   };
 
+  function rankToChar(){
+    switch(true){
+      case(card.rank <=0): return "X"
+      case(card.rank==CardRank.Ace):return "A"
+      case(card.rank==CardRank.Jack): return "J"
+      case(card.rank==CardRank.Queen): return "Q"
+      case(card.rank==CardRank.King): return "K"
+      default:return card.rank
+    }
+  }
+
   return (
     <div className={`card ${isRed ? "red" : "black"}`}>
-      <span className="card-rank">{card.visible ? card.rank : "X"}</span>
-      <span className="card-suit">{card.visible ? suitSymbols[card.suit] : "X"}</span>
+      <span className="card-rank">{rankToChar()}</span>
+
+      <span className="card-suit">{card.rank>0 ? suitSymbols[card.suit] : "X"}</span>
     </div>
   );
 }

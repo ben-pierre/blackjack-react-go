@@ -1,18 +1,25 @@
-import { CardSuit, CardRank } from "../Types/PlayingCard";
-import type { Card } from "../Types/PlayingCard";
-
 export type playingHand = {
   cards: Card[];
 };
 
+
+export type Game = {
+  id : string;
+  playerHand : playingHand
+  dealerHand : playingHand
+  phase : GamePhase
+}
+
 export type GamePhase =
-  | "playerPlaying"
-  | "dealerPlaying"
+  | "preGame"
+  | "player"
+  | "dealer"
   | "win"
   | "lose"
-  | "tie";
+  | "push";
 
 export function sumHand(hand: playingHand): number {
+
   let total = 0;
   let aces = 0;
   for (const card of hand.cards) {
@@ -20,7 +27,7 @@ export function sumHand(hand: playingHand): number {
       aces++;
       total += 11;
     } else {
-      total += card.rank;
+      total += Math.min(card.rank,10);
     }
   }
   while (total > 21 && aces > 0) {
@@ -42,12 +49,12 @@ export function checkDealerWin(
     return "lose";
   }
   if (dealerHandValue === playerHandValue && dealerHandValue >= 17) {
-    return "tie";
+    return "push";
   }
   if (dealerHandValue >= 17) {
     return "win";
   }
-  return "dealerPlaying"; //default
+  return "dealer"; //default
 }
 
 export function createDeck(): Card[] {
@@ -59,7 +66,7 @@ export function createDeck(): Card[] {
     for (const rank of Object.values(CardRank).filter(
       (v): v is CardRank => typeof v === "number"
     )) {
-      deck.push({ suit, rank, visible: true });
+      deck.push({ suit, rank});
     }
   }
 
@@ -70,3 +77,34 @@ export function createDeck(): Card[] {
 
   return deck;
 }
+export type Card = {
+  rank: CardRank;
+  suit: CardSuit;
+};
+
+export const CardSuit = {
+  Spade: "spades",
+  Diamond: "diamonds",
+  Club: "clubs",
+  Heart:"hearts",
+} as const;
+
+export type CardSuit = typeof CardSuit[keyof typeof CardSuit];
+
+export const CardRank = {
+  Ace: 1,
+  Two: 2,
+  Three: 3,
+  Four: 4,
+  Five: 5,
+  Six: 6,
+  Seven: 7,
+  Eight: 8,
+  Nine: 9,
+  Ten: 10,
+  Jack: 11,
+  Queen: 12,
+  King: 13,
+} as const;
+
+export type CardRank = typeof CardRank[keyof typeof CardRank];

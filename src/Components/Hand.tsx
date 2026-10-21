@@ -1,6 +1,6 @@
 import PlayingCard from "./Card";
-import { sumHand } from "./../Types/blackjack";
-import type { playingHand } from "./../Types/blackjack";
+import { sumHand } from "../types/blackjack";
+import type { playingHand } from "../types/blackjack";
 
 type HandProps = {
   title: string;

@@ -1,209 +1,170 @@
 import "./Blackjack.css";
 import { useState } from "react";
-import { Link} from "react-router";
-import { checkDealerWin, sumHand, createDeck } from "../Types/blackjack";
-import HandSection from "../Components/Hand";
-import type { playingHand, GamePhase } from "../Types/blackjack";
-import type { Card } from "../Types/PlayingCard";
+import { Link } from "react-router";
+import * as blackjack from "../types/blackjack";
+import Hand from "../components/Hand";
+import { blackjackService } from "../services/blackjackService";
 
-function dealInitialHands(deck: Card[]) {
-  const newDeck = [...deck];
-
-  const playerHand: playingHand = {
-    cards: [newDeck.pop()!, newDeck.pop()!],
-  };
-
-  const dealerHand: playingHand = {
-    cards: [newDeck.pop()!, newDeck.pop()!],
-  };
-
-  dealerHand.cards[0].visible = false;
-
-  return { newDeck, playerHand, dealerHand };
-}
+  function getEmptyGame(): blackjack.Game{
+    const game:blackjack.Game = {
+      id:"0",
+      playerHand: {cards:[]},
+      dealerHand: {cards:[]},
+      phase: "preGame",
+    }
+    return game
+  }
 
 export default function Blackjack() {
-  const [initialGame] = useState(() => dealInitialHands(createDeck()));
+  
+  const [game, setGame] = useState<blackjack.Game>(getEmptyGame()); 
 
-  const [phase, setPhase] = useState<GamePhase>("playerPlaying");
-  const [deck, setDeck] = useState<Card[]>(initialGame.newDeck);
-  const [playerHand, setPlayerHand] = useState<playingHand>(
-    initialGame.playerHand
-  );
-  const [dealerHand, setDealerHand] = useState<playingHand>(
-    initialGame.dealerHand
-  );
+  const [visibleDealerCards, setVisibleDealerCards] = useState<blackjack.playingHand>({cards:[]});
+
   const [dealerRevealed, setDealerRevealed] = useState(false);
 
-  const gameOver = phase === "win" || phase === "lose" || phase === "tie";
+  const gameOver =
+    game.phase === "win" || game.phase === "lose" || game.phase === "push";
 
-  function resetGame() {
-    const game = dealInitialHands(createDeck());
-
-    setDealerRevealed(false);
-    setDeck(game.newDeck);
-    setPlayerHand(game.playerHand);
-    setDealerHand(game.dealerHand);
-    setPhase("playerPlaying");
+  async function newGame() {
+    setGameUi(await blackjackService.newGame());
   }
 
   function delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  function showHand(hand: playingHand): playingHand {
-    return {
-      cards: hand.cards.map((card) => ({
-        ...card,
-        visible: true,
-      })),
-    };
+  async function hit() {
+    if (game.phase !== "player") return;
+    setGameUi(await blackjackService.hit());
   }
 
-  function hit() {
-    if (phase !== "playerPlaying" || deck.length === 0) return;
-
-    const nextDeck = [...deck];
-    const card = nextDeck.pop()!;
-
-    const nextHand: playingHand = {
-      cards: [...playerHand.cards, card],
-    };
-
-    setDeck(nextDeck);
-    setPlayerHand(nextHand);
-
-    if (sumHand(nextHand) > 21) {
-      setDealerHand(showHand(dealerHand));
-      setPhase("lose");
-    }
+  function setGameUi(game : blackjack.Game){
+      setGame(game)
+      setVisibleDealerCards({cards:game.dealerHand.cards})
   }
 
   async function stay() {
-    if (phase !== "playerPlaying") return;
-    
-    setPhase("dealerPlaying");
-
-    // Pause before revealing the dealer's hole card.
-    await delay(1000);
-
-    let nextDealerHand = showHand(dealerHand);
-    let nextDeck = [...deck];
-
-    setDealerHand(nextDealerHand);
+    if (game.phase !== "player") return;
+    const updatedGame = await blackjackService.stay()
     setDealerRevealed(true);
+    await delay(500)
+    const cards= updatedGame.dealerHand.cards
 
-    // Draw one card at a time, with a pause between each.
-    while (sumHand(nextDealerHand) < 17 && nextDeck.length > 0) {
-      await delay(1000);
+    setVisibleDealerCards({cards:cards.slice(0,2)})
 
-      const card = nextDeck.pop()!;
-
-      nextDealerHand = {
-        cards: [...nextDealerHand.cards, card],
-      };
-
-      setDealerHand(nextDealerHand);
+    for (let index = 2; index < cards.length; index++) {
+      await delay(500);
+      setVisibleDealerCards((prev) => ({
+        cards: [...prev.cards,  cards[index]]
+      }));
     }
-
-    setDeck(nextDeck);
-
-    // Determine the result after the dealer finishes.
-    setPhase(checkDealerWin(sumHand(nextDealerHand), sumHand(playerHand)));
+    setGameUi(updatedGame);
   }
 
   function getPhaseTitle(): string {
-    switch (phase) {
-      case "playerPlaying":
+    switch (game.phase) {
+      case "player":
         return "Your Turn";
-      case "dealerPlaying":
+      case "player":
         return "Dealer's Turn";
       case "win":
         return "You Win!";
       case "lose":
         return "You Lose";
-      case "tie":
+      case "push":
         return "Push!";
+      default:
+        return "Waiting...";
     }
   }
 
   function getResultMessage(): string {
-    switch (phase) {
+    switch (game.phase) {
       case "win":
         return "Nice hand! You beat the dealer.";
       case "lose":
-        return sumHand(playerHand) > 21
+        return blackjack.sumHand(game.playerHand) > 21
           ? "Bust! You went over 21."
           : "Better luck next hand.";
-      case "tie":
+      case "push":
         return "A push! Nobody wins this hand.";
       default:
-        return "";
+        return "Waiting...";
     }
   }
 
   return (
     <main className="blackjack">
       <header className="blackjackHeader">
-      <Link to="/" className="homeButton">
-      ← Home
-</Link>
-
+        <Link to="/" className="homeButton">
+          ← Home
+        </Link>
 
         <h1>Blackjack</h1>
       </header>
 
       <section className="table">
-      <HandSection
-          title="Dealer" hand={dealerHand} hidden={!dealerRevealed}
+        <Hand
+          title="Dealer"
+          hand={visibleDealerCards}
+          hidden={!dealerRevealed}
         />
 
         <div className="tableDivider" />
-        <HandSection
-          title="Your hand" hand={playerHand}
-        />
+        <Hand title="Your hand" hand={game?.playerHand} />
       </section>
 
       {gameOver ? (
-        <section className={`gameResult result-${phase}`} aria-live="polite">
+        <section
+          className={`gameResult result-${game.phase}`}
+          aria-live="polite"
+        >
           <div className="resultIcon">
-            {phase === "win" && "♠"}
-            {phase === "lose" && "♣"}
-            {phase === "tie" && "♦"}
+            {game.phase === "win" && "♠"}
+            {game.phase === "lose" && "♣"}
+            {game.phase === "push" && "♦"}
           </div>
 
           <h2>{getPhaseTitle()}</h2>
           <p>{getResultMessage()}</p>
 
           <div className="gameActions">
-            <button type="button" onClick={resetGame}>
+            <button type="button" onClick={newGame}>
               Play Again
             </button>
             <Link to="/" className="secondaryButton">
-  Home
-</Link>
+              Home
+            </Link>
           </div>
         </section>
+      ) : game.phase==="preGame" ? (
+        <div className="gameActions">
+          <button
+            type="button"
+            onClick={newGame}
+          >
+            Deal
+          </button>
+        </div>
       ) : (
         <div className="gameActions">
           <button
             type="button"
             onClick={hit}
-            disabled={phase !== "playerPlaying"}
+            disabled={game.phase !== "player"}
           >
             Hit
           </button>
-
           <button
             type="button"
             onClick={stay}
-            disabled={phase !== "playerPlaying"}
+            disabled={game.phase !== "player"}
           >
             Stay
           </button>
         </div>
       )}
-
       <footer className="blackjackFooter">
         Dealer stands on 17 · Good luck!
       </footer>
