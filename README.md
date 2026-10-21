@@ -1,11 +1,13 @@
 
 # Blackjack
 
-*Proving i still have it, writing 100% organic, home grown errors in the age of vibe coding*
+*Proving I still have it, writing 100% organic, home-grown errors in the age of vibe coding.*
+
+**Play it here:** [whyaresalesdown.com](https://whyaresalesdown.com/)
 
 ## About
 
-Blackjack is a personal project to build a playable blackjack game outside my usual .net / Microsoft ecosystem,  on an unfamiliar tech stack of **React, golang, and aws**
+Blackjack is a personal project to build a playable blackjack game outside my usual .NET / Microsoft ecosystem, on an unfamiliar tech stack of **React, Go, and AWS**.
 
 ## Tech Stack
 
