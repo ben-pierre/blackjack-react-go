@@ -1,32 +1,28 @@
-# React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+# Blackjack
 
-Currently, two official plugins are available:
+*Proving i still have it, writing 100% organic, home grown errors in the age of vibe coding*
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## About
 
-## React Compiler
+Blackjack is a personal project to build a playable blackjack game outside my usual .net / Microsoft ecosystem,  on an unfamiliar tech stack of **React, golang, and aws**
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the Oxlint configuration
+- **Frontend:** React, TypeScript, Vite
+- **Backend:** Go
+- **Hosting:** AWS S3 and CloudFront for the frontend; AWS Lambda planned for the backend
+- **Persistence:** Database-backed game state planned
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Goals
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+- Build a functional blackjack game with server-side game logic.
+- Learn Go through practical API development.
+- Improve my React and TypeScript skills.
+- Explore AWS serverless deployment and cloud architecture.
+- Develop a foundation for player accounts, authentication, balances, and wagers.
+- Keep the code organic, homegrown, and mostly free-range.
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Development Philosophy
+
+This is a learning project, not a race to ship something as quickly as possible. The point is to understand what I'm building.
