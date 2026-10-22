@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
       - name: Install dependencies
-          run: npm ci --no-fund
+        run: npm ci --verbose --no-fund
       - name: Build website
         run: npm run build
         env:
