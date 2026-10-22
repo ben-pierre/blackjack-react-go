@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'backend/**'
-      - '.github/workflows/backend.yml'
+      - '.github/workflows/backend.yaml'
 
 jobs:
   build:
@@ -37,4 +37,4 @@ jobs:
             --zip-file fileb://function.zip
       - name: Check Lambda Health
         run: |
-          curl --fail --silent --show-error https://api.whyaresalesdown.com/healthcheck
+          curl --fail --silent --show-error https://api.whyaresalesdown.com/healthz
