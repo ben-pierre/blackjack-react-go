@@ -1,7 +1,7 @@
 import * as blackjack from "../types/blackjack";
 
 class BlackJackService {
-  private gameUUID: string;
+  private gameUUID: string = "";
 
   private readonly apiUrl = import.meta.env.VITE_API_URL;
 
