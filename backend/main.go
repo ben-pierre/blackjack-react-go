@@ -61,6 +61,11 @@ func handleGameAction(
 	json.NewEncoder(w).Encode(game.ToResponse())
 }
 
+func healthcheck(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
 func main() {
 	var service = blackjackservice.New()
 
@@ -78,6 +83,8 @@ func main() {
 	mux.HandleFunc("POST /blackjack/{id}/stay", func(w http.ResponseWriter, r *http.Request) {
 		handleGameAction(w, r, (*blackjackservice.Game).Stay, service)
 	})
+
+	mux.HandleFunc("GET /healthz", healthcheck)
 
 	handler := corsMiddleware(mux)
 	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
