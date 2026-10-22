@@ -35,3 +35,6 @@ jobs:
           aws lambda update-function-code \
             --function-name blackjack-api \
             --zip-file fileb://function.zip
+      - name: Check Lambda Health
+        run: |
+          curl --fail --silent --show-error https://api.whyaresalesdown.com/healthcheck
