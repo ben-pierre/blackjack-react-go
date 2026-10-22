@@ -1,0 +1,37 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Go environment
+        uses: actions/setup-go@v7.0.0
+        with:
+          go-version: '1.27.2'
+      - name: Build Go application
+        run: |
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bootstrap .
+          zip function.zip bootstrap
+      - name: Set AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Deploy Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name blackjack-api \
+            --zip-file fileb://function.zip
