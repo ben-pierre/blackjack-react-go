@@ -1,7 +1,9 @@
 package main
 
 import (
-	"blackjack/internal/blackjackservice"
+	"blackjack/internal/blackjack"
+	"blackjack/internal/domain"
+	"blackjack/internal/postgres"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -16,7 +18,7 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-func newGame(w http.ResponseWriter, r *http.Request, service *blackjackservice.Service) {
+func newGame(w http.ResponseWriter, r *http.Request, service *blackjack.Service) {
 	newGame := service.GetNewGame()
 
 	w.Header().Set("Content-Type", "application/json")
@@ -24,18 +26,18 @@ func newGame(w http.ResponseWriter, r *http.Request, service *blackjackservice.S
 	json.NewEncoder(w).Encode(newGame.ToResponse())
 }
 
-func getGames(w http.ResponseWriter, r *http.Request, service *blackjackservice.Service) {
-	summaries := service.GetGames()
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(summaries)
+// func getGames(w http.ResponseWriter, r *http.Request, service *blackjack.Service) {
+// 	summaries := service.GetGames()
+// 	w.Header().Set("Content-Type", "application/json")
+// 	json.NewEncoder(w).Encode(summaries)
 
-}
+// }
 
 func handleGameAction(
 	w http.ResponseWriter,
 	r *http.Request,
-	action func(*blackjackservice.Game) error,
-	service *blackjackservice.Service,
+	action func(*domain.Game) error,
+	service *blackjack.Service,
 ) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -67,21 +69,22 @@ func healthcheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	var service = blackjackservice.New()
-
+	pgService := postgres.New()
+	var service = blackjack.New(pgService)
+	defer pgService.Close()
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /blackjack/new", func(w http.ResponseWriter, r *http.Request) {
 		newGame(w, r, service)
 	})
-	mux.HandleFunc("GET /blackjack/games", func(w http.ResponseWriter, r *http.Request) { getGames(w, r, service) })
+	// mux.HandleFunc("GET /blackjack/games", func(w http.ResponseWriter, r *http.Request) { getGames(w, r, service) })
 
 	mux.HandleFunc("POST /blackjack/{id}/hit", func(w http.ResponseWriter, r *http.Request) {
-		handleGameAction(w, r, (*blackjackservice.Game).Hit, service)
+		handleGameAction(w, r, (*domain.Game).Hit, service)
 	})
 
 	mux.HandleFunc("POST /blackjack/{id}/stay", func(w http.ResponseWriter, r *http.Request) {
-		handleGameAction(w, r, (*blackjackservice.Game).Stay, service)
+		handleGameAction(w, r, (*domain.Game).Stay, service)
 	})
 
 	mux.HandleFunc("GET /healthz", healthcheck)
@@ -91,6 +94,7 @@ func main() {
 		log.Println("Lambda handler starting")
 		lambda.Start(httpadapter.NewV2(handler).ProxyWithContext)
 	} else {
+		log.Print("Started server")
 		log.Fatal(http.ListenAndServe(":8080", handler))
 	}
 }
