@@ -58,8 +58,8 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   const session = await fetchAuthSession();
   const token = session.tokens?.accessToken.toString();
 
-  if (!token) {
-    throw new Error("User is not authenticated");
+  if(!token){
+    return
   }
 
   return {

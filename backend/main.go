@@ -27,10 +27,10 @@ type userIDKey struct{}
 func newGame(w http.ResponseWriter, r *http.Request, service *blackjack.Service) {
 	userID, ok := r.Context().Value(userIDKey{}).(string)
 	if !ok {
-		http.Error(w, "User Not Found", http.StatusUnauthorized)
-		return
+		log.Printf("Creating guest game")
+	} else {
+		log.Printf("Creating new game for user %v", userID)
 	}
-	log.Printf("Creating new game for user %v", userID)
 
 	newGame := service.GetNewGame()
 	w.Header().Set("Content-Type", "application/json")
@@ -46,10 +46,11 @@ func handleGameAction(
 ) {
 	userID, ok := r.Context().Value(userIDKey{}).(string)
 	if !ok {
-		http.Error(w, "User Not Found", http.StatusUnauthorized)
-		return
+		log.Printf("Creating guest game")
+	} else {
+		log.Printf("Creating new game for user %v", userID)
 	}
-	log.Printf("Creating new game for user %v", userID)
+	log.Printf("Processing game action for user %v", userID)
 
 	w.Header().Set("Content-Type", "application/json")
 	gameId, err := uuid.Parse(r.PathValue("id"))
@@ -149,8 +150,10 @@ func authMiddleware(
 
 		if authHeader == "" && optional {
 			next.ServeHTTP(w, r)
+			log.Print("Optional auth set, no bearer token passed, skipping")
 			return
 		}
+		log.Printf("Found auth header %v, passing", authHeader)
 
 		if !strings.HasPrefix(authHeader, "Bearer ") {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
