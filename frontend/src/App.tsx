@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, useLocation, Navigate} from "react-router";
-import { Amplify } from 'aws-amplify';
 import Home from "./pages/Home";
 import Blackjack from "./pages/Blackjack";
 import Account from "./pages/Account"
