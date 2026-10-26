@@ -12,9 +12,8 @@ Blackjack is a personal project to build a playable blackjack game outside my us
 ## Tech Stack
 
 - **Frontend:** React, TypeScript, Vite
-- **Backend:** Go
-- **Hosting:** AWS S3 and CloudFront for the frontend; AWS Lambda planned for the backend
-- **Persistence:** Database-backed game state planned
+- **Backend:** Go, PostgreSQL
+- **AWS:** S3, CloudFront, Lambda, API Gateway, Aurora PostgreSQL Serverless, Cognito, Certificate Manager (ACM)
 
 ## Goals
 

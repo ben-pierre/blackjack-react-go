@@ -1,6 +1,8 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router";
+import { BrowserRouter, Routes, Route, useLocation, Navigate} from "react-router";
+import { Amplify } from 'aws-amplify';
 import Home from "./pages/Home";
 import Blackjack from "./pages/Blackjack";
+import Account from "./pages/Account"
 
 import "./App.css";
 
@@ -17,6 +19,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/blackjack" element={<Blackjack />} />
+        <Route path="/account" element={<Account/>}/>
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
