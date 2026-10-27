@@ -23,12 +23,12 @@ Amplify.configure({
           domain: 'auth.whyaresalesdown.com',
           scopes: ['openid', 'email', 'phone'],
           redirectSignIn: [
-            'http://localhost:5173/account',
-            // 'https://whyaresalesdown.com/account',
+            'http://localhost:5173/blackjack',
+            'https://whyaresalesdown.com/blackjack',
           ],
           redirectSignOut: [
-            'http://localhost:5173/account',
-            // 'https://whyaresalesdown.com/account',
+            'http://localhost:5173/blackjack',
+            'https://whyaresalesdown.com/blackjack',
           ],
           responseType: 'code',
         },
