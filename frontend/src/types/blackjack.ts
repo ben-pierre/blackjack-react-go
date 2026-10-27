@@ -4,7 +4,8 @@ export type playingHand = {
 
 
 export type Game = {
-  id : string;
+  gameId : string
+  guestToken : string
   playerHand : playingHand
   dealerHand : playingHand
   phase : GamePhase

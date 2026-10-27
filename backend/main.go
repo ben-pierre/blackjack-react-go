@@ -25,15 +25,26 @@ type ErrorResponse struct {
 type userIDKey struct{}
 
 func newGame(w http.ResponseWriter, r *http.Request, service *blackjack.Service) {
-	userID, ok := r.Context().Value(userIDKey{}).(string)
+	w.Header().Set("Content-Type", "application/json")
+
+	userId, ok := r.Context().Value(userIDKey{}).(uuid.UUID)
 	if !ok {
+		userId = uuid.Nil()
 		log.Printf("Creating guest game")
 	} else {
-		log.Printf("Creating new game for user %v", userID)
+		log.Printf("Creating new game for user %v", userId)
 	}
 
-	newGame := service.GetNewGame()
-	w.Header().Set("Content-Type", "application/json")
+	newGame, err := service.GetNewGame(userId)
+
+	if err != nil {
+		log.Printf("Failed to create new game: %v", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Error: "Failed to create game",
+		})
+		return
+	}
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(newGame.ToResponse())
 }
@@ -44,12 +55,13 @@ func handleGameAction(
 	action func(*domain.Game) error,
 	service *blackjack.Service,
 ) {
-	userID, ok := r.Context().Value(userIDKey{}).(string)
+	userID, ok := r.Context().Value(userIDKey{}).(uuid.UUID)
+
+	guestToken := r.Header.Get("X-Guest-Token")
 	if !ok {
-		log.Printf("Creating guest game")
-	} else {
-		log.Printf("Creating new game for user %v", userID)
+		userID = uuid.Nil()
 	}
+
 	log.Printf("Processing game action for user %v", userID)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -62,9 +74,10 @@ func handleGameAction(
 		return
 	}
 
-	game, gameErr := service.HandleGameAction(gameId, action)
+	game, gameErr := service.HandleGameAction(gameId, userID, guestToken, action)
 
 	if gameErr != nil {
+		log.Printf("Failed to handle game action: %v", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(ErrorResponse{
 			Error: gameErr.Error(),
@@ -95,34 +108,40 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.Handle("POST /blackjack/new", authMiddleware(
+	mux.Handle("POST /blackjack/new", authMiddleware(logMiddleware(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			newGame(w, r, service)
-		}), keyFunc, true,
+		})), keyFunc, true,
 	))
 
-	mux.Handle("POST /blackjack/{id}/hit", authMiddleware(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handleGameAction(w, r, (*domain.Game).Hit, service)
-		}), keyFunc, true,
-	))
+	mux.Handle("POST /blackjack/{id}/hit",
+		authMiddleware(
+			logMiddleware(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					handleGameAction(w, r, (*domain.Game).Hit, service)
+				})), keyFunc, true,
+		))
 
 	mux.Handle("POST /blackjack/{id}/stay",
 		authMiddleware(
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				handleGameAction(w, r, (*domain.Game).Stay, service)
-			}), keyFunc, true,
-		))
+			logMiddleware(
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					handleGameAction(w, r, (*domain.Game).Stay, service)
+				}),
+			),
+			keyFunc,
+			true,
+		),
+	)
 
 	mux.HandleFunc("GET /healthz", healthcheck)
 
-	handler := corsMiddleware(mux)
 	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
 		log.Println("Lambda handler starting")
-		lambda.Start(httpadapter.NewV2(handler).ProxyWithContext)
+		lambda.Start(httpadapter.NewV2(mux).ProxyWithContext)
 	} else {
 		log.Print("Started server")
-		log.Fatal(http.ListenAndServe(":8080", handler))
+		log.Fatal(http.ListenAndServe(":8080", corsMiddleware(mux)))
 	}
 }
 
@@ -130,12 +149,23 @@ func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Method: %s, Path: %s", r.Method, r.URL.Path)
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Methods", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func logMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		userID, _ := r.Context().Value(userIDKey{}).(uuid.UUID)
+
+		guestToken := r.Header.Get("X-Guest-Token")
+		log.Printf("Handling request with UUID : %v, guestToken : %v", userID, guestToken)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -197,7 +227,14 @@ func authMiddleware(
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), userIDKey{}, userID)
+		userUUID, err := uuid.Parse(userID)
+
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), userIDKey{}, userUUID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

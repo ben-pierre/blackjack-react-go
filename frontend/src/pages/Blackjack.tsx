@@ -7,10 +7,11 @@ import { blackjackService } from "../services/blackjackService";
 
   function getEmptyGame(): blackjack.Game{
     const game:blackjack.Game = {
-      id:"0",
+      gameId:"",
       playerHand: {cards:[]},
       dealerHand: {cards:[]},
       phase: "preGame",
+      guestToken :""
     }
     return game
   }

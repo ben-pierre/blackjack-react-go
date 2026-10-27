@@ -16,19 +16,23 @@ type Hand struct {
 }
 
 type Game struct {
-	UUID       uuid.UUID
+	GameId     uuid.UUID
 	PlayerHand Hand
 	DealerHand Hand
 	Phase      string
 	Deck       Deck
 	Wager      int
+	GuestToken string
+	UserId     uuid.UUID
 }
 
 type GameResponse struct {
-	UUID       uuid.UUID `json:"id"`
+	UUID       uuid.UUID `json:"gameId"`
 	PlayerHand Hand      `json:"playerHand"`
 	DealerHand Hand      `json:"dealerHand"`
 	Phase      string    `json:"phase"`
+	// UserId     uuid.UUID `json:"userId"` // don't need? Handled via auth?
+	GuestToken string `json:"guestToken"`
 }
 
 type GameSummary struct {
@@ -56,10 +60,11 @@ func (game *Game) ToResponse() GameResponse {
 	}
 
 	return GameResponse{
-		UUID:       game.UUID,
+		UUID:       game.GameId,
 		PlayerHand: game.PlayerHand,
 		DealerHand: dealerHand,
 		Phase:      game.Phase,
+		GuestToken: game.GuestToken,
 	}
 }
 

@@ -6,6 +6,6 @@ import (
 )
 
 type GameStore interface {
-	GetGame(id uuid.UUID) (domain.Game, error)
+	GetGame(gameId uuid.UUID, userId uuid.UUID, guestToken string) (domain.Game, error)
 	UpdateGame(game domain.Game) error
 }

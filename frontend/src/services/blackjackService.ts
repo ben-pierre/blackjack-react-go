@@ -2,7 +2,7 @@ import * as blackjack from "../types/blackjack";
 import { fetchAuthSession } from "aws-amplify/auth";
 
 class BlackJackService {
-  private gameUUID: string = "";
+  private game: blackjack.Game
 
   private readonly apiUrl = import.meta.env.VITE_API_URL;
 
@@ -15,16 +15,16 @@ class BlackJackService {
     if (!response.httpResponse.ok) {
       throw new Error("Failed to create game");
     }
-    this.gameUUID = response.body.id;
+    this.game = response.body
     return response.body;
   }
 
   async hit(): Promise<blackjack.Game> {
 
     const response = await apiFetchAndLog<blackjack.Game>(
-      `${this.apiUrl}/blackjack/${this.gameUUID}/hit`,
+      `${this.apiUrl}/blackjack/${this.game.gameId}/hit`,
       { method: "POST",
-      headers: await getAuthHeaders() 
+      headers: {...await getAuthHeaders(), ...getGuestTokenHeader(this.game.guestToken)}
     }
     );
     if (!response.httpResponse.ok) {
@@ -35,7 +35,7 @@ class BlackJackService {
 
   async stay(): Promise<blackjack.Game> {
     const response = await apiFetchAndLog<blackjack.Game>(
-      `${this.apiUrl}/blackjack/${this.gameUUID}/stay`,
+      `${this.apiUrl}/blackjack/${this.game.gameId}/stay`,
       { method: "POST",
       headers: await getAuthHeaders()  }
     );
@@ -65,6 +65,15 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   return {
     Authorization: `Bearer ${token}`,
   };
+}
+
+function getGuestTokenHeader(guestToken: string): HeadersInit{
+
+  if(guestToken!==""){
+    return {"X-Guest-Token": guestToken}
+  }else{
+    return {}
+  }
 }
 
 export const blackjackService = new BlackJackService();
