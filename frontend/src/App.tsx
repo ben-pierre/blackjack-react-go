@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, useLocation, Navigate} from "react-router
 import Home from "./pages/Home";
 import Blackjack from "./pages/Blackjack";
 import Account from "./pages/Account"
+import {AppLayout} from "./components/AppLayout"
 
 import "./App.css";
 
@@ -17,8 +18,11 @@ function App() {
       <RouteDebug />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route element={<AppLayout/>}>
         <Route path="/blackjack" element={<Blackjack />} />
         <Route path="/account" element={<Account/>}/>
+        </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

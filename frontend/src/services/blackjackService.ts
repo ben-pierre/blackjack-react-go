@@ -37,7 +37,7 @@ class BlackJackService {
     const response = await apiFetchAndLog<blackjack.Game>(
       `${this.apiUrl}/blackjack/${this.game.gameId}/stay`,
       { method: "POST",
-      headers: await getAuthHeaders()  }
+      headers: {...await getAuthHeaders(), ...getGuestTokenHeader(this.game.guestToken)}  }
     );
     if (!response.httpResponse.ok) {
       throw new Error("Failed to create game");

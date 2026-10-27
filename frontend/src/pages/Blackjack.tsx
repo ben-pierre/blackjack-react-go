@@ -98,10 +98,6 @@ export default function Blackjack() {
   return (
     <main className="blackjack">
       <header className="blackjackHeader">
-        <Link to="/" className="homeButton">
-          ← Home
-        </Link>
-
         <h1>Blackjack</h1>
       </header>
 
@@ -134,9 +130,6 @@ export default function Blackjack() {
             <button type="button" onClick={newGame}>
               Play Again
             </button>
-            <Link to="/" className="secondaryButton">
-              Home
-            </Link>
           </div>
         </section>
       ) : game.phase==="preGame" ? (
