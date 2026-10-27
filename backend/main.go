@@ -27,13 +27,7 @@ type userIDKey struct{}
 func newGame(w http.ResponseWriter, r *http.Request, service *blackjack.Service) {
 	w.Header().Set("Content-Type", "application/json")
 
-	userId, ok := r.Context().Value(userIDKey{}).(uuid.UUID)
-	if !ok {
-		userId = uuid.Nil()
-		log.Printf("Creating guest game")
-	} else {
-		log.Printf("Creating new game for user %v", userId)
-	}
+	userId, _ := r.Context().Value(userIDKey{}).(uuid.UUID) //checked in auth middle ware
 
 	newGame, err := service.GetNewGame(userId)
 
@@ -77,7 +71,7 @@ func handleGameAction(
 	game, gameErr := service.HandleGameAction(gameId, userID, guestToken, action)
 
 	if gameErr != nil {
-		log.Printf("Failed to handle game action: %v", err.Error())
+		log.Printf("Failed to handle game action: %v", gameErr.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(ErrorResponse{
 			Error: gameErr.Error(),
@@ -98,10 +92,9 @@ func main() {
 	var service = blackjack.New(pgService)
 	defer pgService.Close()
 
-	// Create the keyfunc.Keyfunc.
 	jwtIssuer := os.Getenv("COGNITOISSUER")
 	jwksURL := jwtIssuer + "/.well-known/jwks.json"
-	keyFunc, err := keyfunc.NewDefaultCtx(context.Background(), []string{jwksURL}) // Context is used to end the refresh goroutine.
+	keyFunc, err := keyfunc.NewDefaultCtx(context.Background(), []string{jwksURL})
 	if err != nil {
 		log.Fatalf("Failed to create a keyfunc.Keyfunc from the server's URL.\nError: %s", err)
 	}
@@ -161,12 +154,11 @@ func corsMiddleware(next http.Handler) http.Handler {
 
 func logMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// userID, _ := r.Context().Value(userIDKey{}).(uuid.UUID)
 
-		userID, _ := r.Context().Value(userIDKey{}).(uuid.UUID)
-
-		guestToken := r.Header.Get("X-Guest-Token")
-		log.Printf("Handling request with UUID : %v, guestToken : %v", userID, guestToken)
-		next.ServeHTTP(w, r)
+		// guestToken := r.Header.Get("X-Guest-Token")
+		// log.Printf("Handling request with UUID : %v, guestToken : %v", userID, guestToken)
+		// next.ServeHTTP(w, r)
 	})
 }
 

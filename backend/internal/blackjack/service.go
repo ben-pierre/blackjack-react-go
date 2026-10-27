@@ -9,7 +9,6 @@ import (
 )
 
 type Service struct {
-	//mu sync.RWMutex //todo bjp, don't need this now that we're on the db
 	db GameStore
 }
 

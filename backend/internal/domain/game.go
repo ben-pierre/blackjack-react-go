@@ -31,8 +31,7 @@ type GameResponse struct {
 	PlayerHand Hand      `json:"playerHand"`
 	DealerHand Hand      `json:"dealerHand"`
 	Phase      string    `json:"phase"`
-	// UserId     uuid.UUID `json:"userId"` // don't need? Handled via auth?
-	GuestToken string `json:"guestToken"`
+	GuestToken string    `json:"guestToken"`
 }
 
 type GameSummary struct {
