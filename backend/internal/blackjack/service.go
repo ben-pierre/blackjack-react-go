@@ -8,27 +8,78 @@ import (
 	"uuid"
 )
 
+var defaultUserBalance int = 50
+
 type Service struct {
-	db GameStore
+	gs GameStore
+	us UserStore
 }
 
-func New(pg GameStore) *Service {
+func New(gs GameStore, us UserStore) *Service {
 	return &Service{
-		db: pg,
+		gs: gs,
+		us: us,
 	}
 }
 
 func (s *Service) HandleGameAction(gameUUID uuid.UUID, userUUID uuid.UUID, guestToken string, action func(*domain.Game) error) (domain.Game, error) {
-	game, err := s.db.GetGame(gameUUID, userUUID, guestToken)
+	game, err := s.gs.GetGame(gameUUID, userUUID, guestToken)
 	if err != nil {
 		return game, fmt.Errorf("game not found : %v", err)
 	}
+
 	err = action(&game)
 	if err != nil {
 		return domain.Game{}, err
 	}
-	err = s.db.UpdateGame(game)
+	err = s.gs.UpdateGame(game)
 	return game, err
+}
+
+func (s *Service) GetUser(userUUID uuid.UUID) (domain.User, error) {
+	user, err := s.us.GetUser(userUUID)
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	if user == nil {
+		user = &domain.User{
+			UserId:  userUUID,
+			Balance: defaultUserBalance,
+		}
+
+		if err := s.us.CreateUser(*user); err != nil {
+			return domain.User{}, err
+		}
+	}
+
+	return *user, nil
+}
+
+func (s *Service) GetUserAccount(userUUID uuid.UUID) (domain.UserAccountResponse, error) {
+	user, err := s.GetUser(userUUID)
+	if err != nil {
+		return domain.UserAccountResponse{}, nil
+	}
+	games, err := s.GetGames(userUUID, 10, 0)
+	if err != nil {
+		return domain.UserAccountResponse{}, nil
+	}
+	return domain.UserAccountResponse{Balance: user.Balance, Games: games}, nil
+}
+
+func (s *Service) GetGames(userId uuid.UUID, limit, offset int) ([]domain.GameResponse, error) {
+	games, err := s.gs.GetGames(userId, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	summaries := make([]domain.GameResponse, 0, len(games))
+	for _, game := range games {
+		summaries = append(summaries, game.ToResponse())
+	}
+
+	return summaries, nil
 }
 
 func (s *Service) GetNewGame(userID uuid.UUID) (domain.Game, error) {
@@ -36,7 +87,11 @@ func (s *Service) GetNewGame(userID uuid.UUID) (domain.Game, error) {
 	newGame := domain.Game{GameId: newGameUUID, Deck: domain.GetNewDeck(domain.DeckConfig{Shuffle: true}), PlayerHand: domain.Hand{}, DealerHand: domain.Hand{}, Phase: "player"}
 
 	if userID != uuid.Nil() {
-		newGame.UserId = userID
+		user, err := s.GetUser(userID)
+		if err != nil {
+			return domain.Game{}, err
+		}
+		newGame.UserId = user.UserId
 	} else {
 		token, err := generateGuestToken(24)
 		if err != nil {
@@ -50,7 +105,7 @@ func (s *Service) GetNewGame(userID uuid.UUID) (domain.Game, error) {
 	newGame.PlayerHand.Cards = append(newGame.PlayerHand.Cards, newGame.Deck.DrawCard())
 	newGame.DealerHand.Cards = append(newGame.DealerHand.Cards, newGame.Deck.DrawCard())
 	newGame.CheckWin()
-	err := s.db.UpdateGame(newGame)
+	err := s.gs.UpdateGame(newGame)
 	return newGame, err
 }
 

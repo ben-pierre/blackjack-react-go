@@ -126,3 +126,94 @@ func (s *Service) GetGame(gameId uuid.UUID, userId uuid.UUID, guestToken string)
 
 	return game, nil
 }
+
+func (s *Service) GetGames(userId uuid.UUID, limit, offset int) ([]domain.Game, error) {
+	rows, err := s.db.Query(`
+		SELECT gameId, phase, wager, deck, playerhand, dealerhand, userId, guestToken
+		FROM games
+		WHERE userId = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3
+	`, userId, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get games for user %s: %w", userId, err)
+	}
+	defer rows.Close()
+
+	var games []domain.Game
+
+	for rows.Next() {
+		var game domain.Game
+		var deck, playerHand, dealerHand []byte
+
+		if err := rows.Scan(
+			&game.GameId,
+			&game.Phase,
+			&game.Wager,
+			&deck,
+			&playerHand,
+			&dealerHand,
+			&game.UserId,
+			&game.GuestToken,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan game: %w", err)
+		}
+
+		if err := json.Unmarshal(deck, &game.Deck); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal deck for game %s: %w", game.GameId, err)
+		}
+		if err := json.Unmarshal(playerHand, &game.PlayerHand); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal player hand for game %s: %w", game.GameId, err)
+		}
+		if err := json.Unmarshal(dealerHand, &game.DealerHand); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal dealer hand for game %s: %w", game.GameId, err)
+		}
+
+		games = append(games, game)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed while iterating games: %w", err)
+	}
+
+	return games, nil
+}
+
+func (s *Service) CreateUser(user domain.User) error {
+	_, err := s.db.Exec(`
+        INSERT INTO users (user_id, balance)
+        VALUES ($1, $2)
+        ON CONFLICT (user_id) DO NOTHING
+    `, user.UserId, user.Balance)
+
+	return err
+}
+
+func (s *Service) UpdateUser(user domain.User) error {
+	_, err := s.db.Exec(`
+        UPDATE users
+        SET balance = $2
+        WHERE user_id = $1
+    `, user.UserId, user.Balance)
+
+	return err
+}
+
+func (s *Service) GetUser(userId uuid.UUID) (*domain.User, error) {
+	var user domain.User
+
+	err := s.db.QueryRow(`
+        SELECT user_id, balance, created_at
+        FROM users
+        WHERE user_id = $1
+    `, userId).Scan(&user.UserId, &user.Balance, &user.CreatedAt)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}

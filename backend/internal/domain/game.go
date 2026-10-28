@@ -34,11 +34,6 @@ type GameResponse struct {
 	GuestToken string    `json:"guestToken"`
 }
 
-type GameSummary struct {
-	UUID  uuid.UUID `json:"id"`
-	Phase string    `json:"phase"`
-}
-
 type Deck []Card
 
 type CardSuit string
