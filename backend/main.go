@@ -97,7 +97,15 @@ func getUserAccount(w http.ResponseWriter, r *http.Request, service *blackjack.S
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(user)
+
+	games, err := service.GetGames(user.UserId, 10, 0)
+	if err != nil {
+		http.Error(w, "Server Error", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	userAccount := domain.UserAccountResponse{Balance: user.Balance, Games: games}
+	json.NewEncoder(w).Encode(userAccount)
 }
 
 func healthcheck(w http.ResponseWriter, r *http.Request) {

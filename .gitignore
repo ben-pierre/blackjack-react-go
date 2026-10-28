@@ -28,3 +28,4 @@ backend/bootstrap
 backend/blackjack.exe
 backend/run.sh
 backend/.vscode/launch.json
+backend/__debug_bin.exe

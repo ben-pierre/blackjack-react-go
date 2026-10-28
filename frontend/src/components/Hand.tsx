@@ -6,12 +6,14 @@ type HandProps = {
   title: string;
   hand: playingHand;
   hidden?: boolean;
+  wager? : number
 };
 
 export default function Hand({
   title,
   hand,
   hidden = false,
+  wager = null
 }: HandProps) {
   return (
     <div className="handSection">
@@ -21,6 +23,10 @@ export default function Hand({
         <span className="handValue">
           {hidden ? "?" : sumHand(hand)}
         </span>
+        {wager ? (        <span className="handWager">
+Wager: {wager}
+</span>):(<></>)}
+
       </div>
 
       <div className="handContainer">

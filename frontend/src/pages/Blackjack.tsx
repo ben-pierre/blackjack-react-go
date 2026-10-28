@@ -1,26 +1,25 @@
-import "./Blackjack.css";
 import { useState } from "react";
-import { Link } from "react-router";
 import * as blackjack from "../types/blackjack";
-import Hand from "../components/Hand";
 import { blackjackService } from "../services/blackjackService";
+import Table from "../components/Table";
 
-  function getEmptyGame(): blackjack.Game{
-    const game:blackjack.Game = {
-      gameId:"",
-      playerHand: {cards:[]},
-      dealerHand: {cards:[]},
-      phase: "preGame",
-      guestToken :""
-    }
-    return game
-  }
+function getEmptyGame(): blackjack.Game {
+  const game: blackjack.Game = {
+    gameId: "",
+    playerHand: { cards: [] },
+    dealerHand: { cards: [] },
+    phase: "preGame",
+    guestToken: "",
+    wager: 0,
+  };
+  return game;
+}
 
 export default function Blackjack() {
-  
-  const [game, setGame] = useState<blackjack.Game>(getEmptyGame()); 
+  const [game, setGame] = useState<blackjack.Game>(getEmptyGame());
 
-  const [visibleDealerCards, setVisibleDealerCards] = useState<blackjack.playingHand>({cards:[]});
+  const [visibleDealerCards, setVisibleDealerCards] =
+    useState<blackjack.playingHand>({ cards: [] });
 
   const [dealerRevealed, setDealerRevealed] = useState(false);
 
@@ -40,24 +39,24 @@ export default function Blackjack() {
     setGameUi(await blackjackService.hit());
   }
 
-  function setGameUi(game : blackjack.Game){
-      setGame(game)
-      setVisibleDealerCards({cards:game.dealerHand.cards})
+  function setGameUi(game: blackjack.Game) {
+    setGame(game);
+    setVisibleDealerCards({ cards: game.dealerHand.cards });
   }
 
   async function stay() {
     if (game.phase !== "player") return;
-    const updatedGame = await blackjackService.stay()
+    const updatedGame = await blackjackService.stay();
     setDealerRevealed(true);
-    await delay(500)
-    const cards= updatedGame.dealerHand.cards
+    await delay(500);
+    const cards = updatedGame.dealerHand.cards;
 
-    setVisibleDealerCards({cards:cards.slice(0,2)})
+    setVisibleDealerCards({ cards: cards.slice(0, 2) });
 
     for (let index = 2; index < cards.length; index++) {
       await delay(500);
       setVisibleDealerCards((prev) => ({
-        cards: [...prev.cards,  cards[index]]
+        cards: [...prev.cards, cards[index]],
       }));
     }
     setGameUi(updatedGame);
@@ -101,16 +100,13 @@ export default function Blackjack() {
         <h1>Blackjack</h1>
       </header>
 
-      <section className="table">
-        <Hand
-          title="Dealer"
-          hand={visibleDealerCards}
-          hidden={!dealerRevealed}
+      {
+        <Table
+          visibleDealerCards={visibleDealerCards}
+          dealerRevealed={dealerRevealed}
+          playerHand={game?.playerHand}
         />
-
-        <div className="tableDivider" />
-        <Hand title="Your hand" hand={game?.playerHand} />
-      </section>
+      }
 
       {gameOver ? (
         <section
@@ -132,12 +128,9 @@ export default function Blackjack() {
             </button>
           </div>
         </section>
-      ) : game.phase==="preGame" ? (
+      ) : game.phase === "preGame" ? (
         <div className="gameActions">
-          <button
-            type="button"
-            onClick={newGame}
-          >
+          <button type="button" onClick={newGame}>
             Deal
           </button>
         </div>

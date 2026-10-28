@@ -1,5 +1,6 @@
 import * as blackjack from "../types/blackjack";
 import { fetchAuthSession } from "aws-amplify/auth";
+import * as user from "../types/user"
 
 class BlackJackService {
   private game: blackjack.Game
@@ -37,10 +38,24 @@ class BlackJackService {
     const response = await apiFetchAndLog<blackjack.Game>(
       `${this.apiUrl}/blackjack/${this.game.gameId}/stay`,
       { method: "POST",
-      headers: {...await getAuthHeaders(), ...getGuestTokenHeader(this.game.guestToken)}  }
-    );
+        headers: {...await getAuthHeaders(), ...getGuestTokenHeader(this.game.guestToken)}
+      }
+    )
     if (!response.httpResponse.ok) {
       throw new Error("Failed to create game");
+    }
+    return response.body;
+  }
+
+  async getAccount(): Promise<user.UserAccount>{
+    const response = await apiFetchAndLog<user.UserAccount>(
+      `${this.apiUrl}/user/account`,
+      { method: "GET",
+        headers: {...await getAuthHeaders()}
+      }
+    )
+    if (!response.httpResponse.ok) {
+      throw new Error("Failed to get user game");
     }
     return response.body;
   }

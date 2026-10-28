@@ -50,12 +50,13 @@ function AuthBar() {
       <nav className="auth-nav">
         <Link to="/">Home</Link>
         <Link to="/blackjack">Blackjack</Link>
+        <Link to="/Account">Account</Link>
       </nav>
 
       <div className="auth-user">
         {user ? (
           <>
-            Signed in as <Link to="/account">{email ?? user.username}</Link>
+            Signed in as <Link to="/account"> {email ?? user.username}</Link>
           </>
         ) : (
           "Playing as guest"

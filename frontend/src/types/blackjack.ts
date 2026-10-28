@@ -9,6 +9,8 @@ export type Game = {
   playerHand : playingHand
   dealerHand : playingHand
   phase : GamePhase
+  wager : number
+
 }
 
 export type GamePhase =

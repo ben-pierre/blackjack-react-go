@@ -32,6 +32,7 @@ type GameResponse struct {
 	DealerHand Hand      `json:"dealerHand"`
 	Phase      string    `json:"phase"`
 	GuestToken string    `json:"guestToken"`
+	Wager      int       `json:"wager"`
 }
 
 type Deck []Card
