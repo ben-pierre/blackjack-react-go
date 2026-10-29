@@ -134,10 +134,12 @@ func main() {
 
 	jwtIssuer := os.Getenv("COGNITOISSUER")
 	jwksURL := jwtIssuer + "/.well-known/jwks.json"
+	log.Printf("Initializing Cognito JWKS client: %s", jwksURL)
 	keyFunc, err := keyfunc.NewDefaultCtx(context.Background(), []string{jwksURL})
 	if err != nil {
 		log.Fatalf("Failed to create a keyfunc.Keyfunc from the server's URL.\nError: %s", err)
 	}
+	log.Println("Cognito JWKS client initialized")
 
 	mux := http.NewServeMux()
 	log.Println("Registering endpoints")
