@@ -44,6 +44,24 @@ func newGame(w http.ResponseWriter, r *http.Request, service *blackjack.Service)
 	json.NewEncoder(w).Encode(newGame.ToResponse())
 }
 
+func getGame(w http.ResponseWriter, r *http.Request, service *blackjack.Service) {
+	userId, ok := r.Context().Value(userIDKey{}).(uuid.UUID)
+	if !ok {
+		http.Error(w, "Unathorized", http.StatusUnauthorized)
+	}
+	gameId, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid Game UUID", http.StatusBadRequest)
+		return
+	}
+	game, err := service.GetGame(gameId, userId)
+	if err != nil {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+	json.NewEncoder(w).Encode(game.ToResponse())
+}
+
 func handleGameAction(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -62,10 +80,7 @@ func handleGameAction(
 	w.Header().Set("Content-Type", "application/json")
 	gameId, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(ErrorResponse{
-			Error: "Invalid Game UUID",
-		})
+		http.Error(w, "Invalid Game UUID", http.StatusBadRequest)
 		return
 	}
 
@@ -73,10 +88,7 @@ func handleGameAction(
 
 	if gameErr != nil {
 		log.Printf("Failed to handle game action: %v", gameErr.Error())
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(ErrorResponse{
-			Error: gameErr.Error(),
-		})
+		http.Error(w, gameErr.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -94,14 +106,12 @@ func getUserAccount(w http.ResponseWriter, r *http.Request, service *blackjack.S
 	user, err := service.GetUser(userId)
 	if err != nil {
 		http.Error(w, "Server Error", http.StatusInternalServerError)
-		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	games, err := service.GetGames(user.UserId, 10, 0)
 	if err != nil {
 		http.Error(w, "Server Error", http.StatusInternalServerError)
-		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	userAccount := domain.UserAccountResponse{Balance: user.Balance, Games: games}
@@ -155,6 +165,18 @@ func main() {
 		chainMiddleware(
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				handleGameAction(w, r, (*domain.Game).Stay, service)
+			}),
+			func(next http.Handler) http.Handler {
+				return authMiddleware(next, keyFunc, true)
+			},
+			logMiddleware,
+		),
+	)
+
+	mux.Handle("GET /blackjack/{id}",
+		chainMiddleware(
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				getGame(w, r, service)
 			}),
 			func(next http.Handler) http.Handler {
 				return authMiddleware(next, keyFunc, true)

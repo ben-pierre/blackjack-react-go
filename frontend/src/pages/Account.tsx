@@ -1,7 +1,6 @@
 import * as user from "../types/user";
 import { useEffect, useState } from "react";
 import { blackjackService } from "../services/blackjackService";
-import Table from "../components/Table";
 import GameHistoryCard from "../components/GameHistoryCard";
 
 export default function Account() {
@@ -19,7 +18,7 @@ export default function Account() {
       }
     }
     refreshUserAccount();
-  });
+  }, []);
 
   return (
     <>
@@ -39,6 +38,7 @@ export default function Account() {
           <div className="gameHistory">
             {userAccount.games.map((game) => (
               <GameHistoryCard
+                gameId={game.gameId}
                 playerHand={game.playerHand}
                 wager={game.wager}
                 resultPhase={game.phase}

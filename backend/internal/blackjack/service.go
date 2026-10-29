@@ -4,6 +4,7 @@ import (
 	"blackjack/internal/domain"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"uuid"
 )
@@ -34,6 +35,17 @@ func (s *Service) HandleGameAction(gameUUID uuid.UUID, userUUID uuid.UUID, guest
 	}
 	err = s.gs.UpdateGame(game)
 	return game, err
+}
+
+func (s *Service) GetGame(gameId uuid.UUID, userId uuid.UUID) (domain.Game, error) {
+	game, err := s.gs.GetGame(gameId, userId, "")
+	if err != nil {
+		return domain.Game{}, err
+	}
+	if game.GameId == uuid.Nil() {
+		return domain.Game{}, errors.New("no game found")
+	}
+	return game, nil
 }
 
 func (s *Service) GetUser(userUUID uuid.UUID) (domain.User, error) {

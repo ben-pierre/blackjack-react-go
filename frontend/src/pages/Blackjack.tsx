@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {useParams} from "react-router"
 import * as blackjack from "../types/blackjack";
 import { blackjackService } from "../services/blackjackService";
 import Table from "../components/Table";
@@ -16,6 +17,19 @@ function getEmptyGame(): blackjack.Game {
 }
 
 export default function Blackjack() {
+  const { gameId } = useParams();
+
+  useEffect(() => {
+    if (!gameId) return;
+  
+    async function loadGame() {
+      const game = await blackjackService.getGame(gameId);
+      setGameUi(game);
+    }
+  
+    loadGame();
+  }, [gameId]);
+
   const [game, setGame] = useState<blackjack.Game>(getEmptyGame());
 
   const [visibleDealerCards, setVisibleDealerCards] =

@@ -1,7 +1,9 @@
 import type { playingHand, GamePhase} from "../types/blackjack";
+import { Link } from "react-router";
 import Hand from "./Hand"
 
 export type GameHistoryCardProperties = {
+    gameId:string
     dealerHand: playingHand;
     playerHand: playingHand;
     wager: number;
@@ -9,6 +11,7 @@ export type GameHistoryCardProperties = {
   };
   
   export default function GameHistoryCard({
+    gameId,
     dealerHand,
     playerHand,
     wager,
@@ -24,7 +27,7 @@ export type GameHistoryCardProperties = {
           case "lose":
             return "You lost!";
           default:
-            return "You left the table!";
+            return "You left the table! Resume?";
         }
       };
 
@@ -32,13 +35,21 @@ export type GameHistoryCardProperties = {
     return (
       <section className={"gameHistoryCard"}>
         <div className={`historyHeader result-${resultPhase}`}>
-          <h3>{getTitle()}</h3>
+          {resultPhase === "player" ? (
+
+<h3><Link to={`/blackjack/${gameId}`}>{getTitle()} </Link></h3>
+          ):(
+            <h3>{getTitle()}</h3>
+
+          )}
+
           <span>Wager: ${wager}</span>
         </div>
   
         <Hand
           title="Dealer"
           hand={dealerHand}
+          hidden={resultPhase==="player"}
         />
   
         <div className="historyDivider" />

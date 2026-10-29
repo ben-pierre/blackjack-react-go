@@ -20,6 +20,20 @@ class BlackJackService {
     return response.body;
   }
 
+  async getGame(gameId:string): Promise<blackjack.Game> {
+
+    const response = await apiFetchAndLog<blackjack.Game>(`${this.apiUrl}/blackjack/${gameId}`, {
+      method: "GET",
+      headers: await getAuthHeaders() 
+    });
+    if (!response.httpResponse.ok) {
+      throw new Error("Failed to get game");
+    }
+    this.game = response.body
+    return response.body;
+  }
+
+
   async hit(): Promise<blackjack.Game> {
 
     const response = await apiFetchAndLog<blackjack.Game>(
