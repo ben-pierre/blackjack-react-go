@@ -41,3 +41,10 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id E35U0AKSXAC35Q \
             --paths "/*"
+      - name: Check Cognito configuration
+        run: |
+          test -n "$VITE_USER_POOL_ID" && echo "User Pool ID is set" || (echo "User Pool ID is MISSING" && exit 1)
+          test -n "$VITE_APP_POOL_ID" && echo "App Client ID is set" || (echo "App Client ID is MISSING" && exit 1)
+        env:
+          VITE_USER_POOL_ID: ${{ secrets.VITE_USER_POOL_ID }}
+          VITE_APP_POOL_ID: ${{ secrets.VITE_APP_POOL_ID }}
