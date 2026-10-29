@@ -5,14 +5,6 @@ import App from './App.tsx'
 import { Amplify } from 'aws-amplify';
 import "aws-amplify/auth/enable-oauth-listener";
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
-
-
-
 Amplify.configure({
   Auth: {
     Cognito: {
@@ -37,7 +29,9 @@ Amplify.configure({
   },
 });
 
-console.log("Cognito config:", {
-  userPoolId: import.meta.env.VITE_USER_POOL_ID,
-  userPoolClientId: import.meta.env.VITE_APP_POOL_ID,
-});
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
