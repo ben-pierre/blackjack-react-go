@@ -124,8 +124,12 @@ func healthcheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	log.Println("Initializing PostgreSQL service")
 	pgService := postgres.New()
-	var service = blackjack.New(pgService, pgService)
+	log.Println("PostgreSQL service initialized")
+	log.Println("Initializing Blackjack service")
+	service := blackjack.New(pgService, pgService)
+	log.Println("Blackjack service initialized")
 	defer pgService.Close()
 
 	jwtIssuer := os.Getenv("COGNITOISSUER")
@@ -136,7 +140,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-
+	log.Println("Registering endpoints")
 	mux.Handle("POST /blackjack/new",
 		chainMiddleware(
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -199,11 +203,15 @@ func main() {
 
 	mux.HandleFunc("GET /healthz", healthcheck)
 
+	log.Println("End points registered\nBuilding handler")
+
 	handler := chainMiddleware(
 		mux,
 		recoverMiddleware,
 		corsMiddleware,
 	)
+
+	log.Println("Built handler\nStarting app")
 
 	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
 		log.Println("Lambda handler starting")
