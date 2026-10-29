@@ -14,7 +14,7 @@ export default function Account() {
         const user = await blackjackService.getAccount();
         setUserAccount(user);
       } catch {
-        setUserAccount(null);
+        setUserAccount(undefined);
       }
     }
     refreshUserAccount();

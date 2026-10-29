@@ -42,8 +42,8 @@ export type GameHistoryCardProperties = {
             <h3>{getTitle()}</h3>
 
           )}
+          {wager > 0 && <span>Wager: ${wager}</span>}
 
-          <span>Wager: ${wager}</span>
         </div>
   
         <Hand

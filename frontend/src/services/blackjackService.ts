@@ -3,7 +3,7 @@ import { fetchAuthSession } from "aws-amplify/auth";
 import * as user from "../types/user"
 
 class BlackJackService {
-  private game: blackjack.Game
+  private game: blackjack.Game = this.GetEmptyGame()
 
   private readonly apiUrl = import.meta.env.VITE_API_URL;
 
@@ -19,6 +19,21 @@ class BlackJackService {
     this.game = response.body
     return response.body;
   }
+    
+  
+  GetEmptyGame(): blackjack.Game {
+    const game: blackjack.Game = {
+      gameId: "",
+      playerHand: { cards: [] },
+      dealerHand: { cards: [] },
+      phase: "preGame",
+      guestToken: "",
+      wager: 0,
+    };
+    return game;
+  }
+
+  
 
   async getGame(gameId:string): Promise<blackjack.Game> {
 
@@ -88,7 +103,7 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   const token = session.tokens?.accessToken.toString();
 
   if(!token){
-    return
+    return {}
   }
 
   return {
@@ -104,5 +119,6 @@ function getGuestTokenHeader(guestToken: string): HeadersInit{
     return {}
   }
 }
+
 
 export const blackjackService = new BlackJackService();

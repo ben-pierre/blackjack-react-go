@@ -4,17 +4,7 @@ import * as blackjack from "../types/blackjack";
 import { blackjackService } from "../services/blackjackService";
 import Table from "../components/Table";
 
-function getEmptyGame(): blackjack.Game {
-  const game: blackjack.Game = {
-    gameId: "",
-    playerHand: { cards: [] },
-    dealerHand: { cards: [] },
-    phase: "preGame",
-    guestToken: "",
-    wager: 0,
-  };
-  return game;
-}
+
 
 export default function Blackjack() {
   const { gameId } = useParams();
@@ -23,6 +13,9 @@ export default function Blackjack() {
     if (!gameId) return;
   
     async function loadGame() {
+      if(!gameId){
+        return;
+      }
       const game = await blackjackService.getGame(gameId);
       setGameUi(game);
     }
@@ -30,7 +23,7 @@ export default function Blackjack() {
     loadGame();
   }, [gameId]);
 
-  const [game, setGame] = useState<blackjack.Game>(getEmptyGame());
+  const [game, setGame] = useState<blackjack.Game>(blackjackService.GetEmptyGame());
 
   const [visibleDealerCards, setVisibleDealerCards] =
     useState<blackjack.playingHand>({ cards: [] });
